@@ -1,0 +1,27 @@
+type Query {
+    songById(id: ID): Song
+    artistById(id: ID): Artist
+    albumById(id: ID): Album
+}
+
+type Song {
+    id: ID
+    name: String
+    artist: Artist
+    album: Album
+    track: Int
+}
+
+type Artist {
+    id: ID
+    albums: [Album]
+    songs: [Song]
+    name: String
+}
+
+type Album {
+    id: ID
+    name: String
+    artist: Artist
+    songs: [Song]
+}
