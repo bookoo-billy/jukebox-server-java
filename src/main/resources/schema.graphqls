@@ -4,6 +4,28 @@ type Query {
     albumById(id: ID): Album
 }
 
+type Mutation {
+    createSong(input: SongInput): Song
+    createArtist(input: ArtistInput): Artist
+    createAlbum(input: AlbumInput): Album
+}
+
+input SongInput {
+    name: String,
+    artistId: String,
+    albumId: String,
+    track: Int
+}
+
+input ArtistInput {
+    name: String
+}
+
+input AlbumInput {
+    name: String,
+    artistId: String
+}
+
 type Song {
     id: ID
     name: String

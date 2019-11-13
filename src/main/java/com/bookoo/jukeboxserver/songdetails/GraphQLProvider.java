@@ -26,7 +26,10 @@ public class GraphQLProvider {
     private GraphQL songs;
 
     @Autowired
-    private GraphQLDataFetchers graphQLDataFetchers;
+    private PostgresGraphQLDataFetchers graphQLDataFetchers;
+
+    @Autowired
+    private PostgresGraphQLDataMutators graphQLDataMutators;
 
     @Bean
     public GraphQL songs() { 
@@ -60,6 +63,10 @@ public class GraphQLProvider {
                     .type(TypeRuntimeWiring.newTypeWiring("Artist")
                             .dataFetcher("albums", graphQLDataFetchers.getAlbumsOfArtistDataFetcher())
                             .dataFetcher("songs", graphQLDataFetchers.getSongsOfArtistDataFetcher()))
+                    .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                            .dataFetcher("createSong", graphQLDataMutators.createSongMutator())
+                            .dataFetcher("createArtist", graphQLDataMutators.createArtistMutator())
+                            .dataFetcher("createAlbum", graphQLDataMutators.createAlbumMutator()))
                     .build();
     }
 }
