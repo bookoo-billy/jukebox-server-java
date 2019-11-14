@@ -5,8 +5,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.UUID;
 
-import com.google.common.collect.ImmutableMap;
+import com.bookoo.jukeboxserver.domain.Album;
+import com.bookoo.jukeboxserver.domain.Artist;
+import com.bookoo.jukeboxserver.domain.Song;
 
 import org.springframework.stereotype.Component;
 
@@ -19,7 +22,7 @@ public class PostgresGraphQLDataMutators {
     private static final String user = "jukebox";
     private static final String password = "example";
 
-    public DataFetcher createSongMutator() {
+    public DataFetcher<Song> createSongMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
 
@@ -29,23 +32,31 @@ public class PostgresGraphQLDataMutators {
             Integer track = (Integer) map.get("track");
 
             try {
-                PreparedStatement pStat = DriverManager.getConnection(url, user, password)
+                PreparedStatement pStatSongs = DriverManager.getConnection(url, user, password)
                                                         .prepareStatement("INSERT INTO songs(name, artistid, albumid, track) VALUES (?, ?::uuid, ?::uuid, ?) RETURNING *");
-                pStat.setString(1, name);
-                pStat.setString(2, artistId);
-                pStat.setString(3, albumId);
-                pStat.setInt(4, track);
 
-                if (pStat.execute()) {
-                    ResultSet rSet = pStat.getResultSet();
+                pStatSongs.setString(1, name);
+                pStatSongs.setString(2, artistId);
+                pStatSongs.setString(3, albumId);
+                pStatSongs.setInt(4, track);
+
+                if (pStatSongs.execute()) {
+                    ResultSet rSet = pStatSongs.getResultSet();
                     if (rSet.next()) {
-                        return ImmutableMap.of(
-                            "id", rSet.getString("id"),
-                            "name", rSet.getString("name"),
-                            "artistId", rSet.getString("artistid"),
-                            "albumId", rSet.getString("albumid"),
-                            "track", String.valueOf(rSet.getInt("track"))
-                        );
+                        PreparedStatement pStatAlbumSongs = DriverManager.getConnection(url, user, password)
+                                                                    .prepareStatement("INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) RETURNING *");
+                        pStatAlbumSongs.setString(1, albumId);
+                        pStatAlbumSongs.setString(2, rSet.getString("id"));
+
+                        if (pStatAlbumSongs.execute()) {
+                            return new Song(
+                                UUID.fromString(rSet.getString("id")),
+                                rSet.getString("name"),
+                                new Album(UUID.fromString(albumId), null, null),
+                                new Artist(UUID.fromString(artistId), null, null, null),
+                                rSet.getInt("track")
+                            );
+                        }
                     }
                 }
 
@@ -56,7 +67,7 @@ public class PostgresGraphQLDataMutators {
         };
     }
 
-    public DataFetcher createArtistMutator() {
+    public DataFetcher<Artist> createArtistMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
             String name = (String) map.get("name");
@@ -69,10 +80,7 @@ public class PostgresGraphQLDataMutators {
                 if (pStat.execute()) {
                     ResultSet rSet = pStat.getResultSet();
                     if (rSet.next()) {
-                        return ImmutableMap.of(
-                            "id", rSet.getString("id"),
-                            "name", rSet.getString("name")
-                        );
+                        return new Artist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null);
                     }
                 }
 
@@ -83,7 +91,7 @@ public class PostgresGraphQLDataMutators {
         };
     }
 
-    public DataFetcher createAlbumMutator() {
+    public DataFetcher<Album> createAlbumMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
             String name = (String) map.get("name");
@@ -98,11 +106,7 @@ public class PostgresGraphQLDataMutators {
                 if (pStat.execute()) {
                     ResultSet rSet = pStat.getResultSet();
                     if (rSet.next()) {
-                        return ImmutableMap.of(
-                            "id", rSet.getString("id"),
-                            "name", rSet.getString("name"),
-                            "artist", ImmutableMap.of()
-                        );
+                        return new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null);
                     }
                 }
 
