@@ -31,6 +31,11 @@ public class GraphQLProvider {
     @Autowired
     private PostgresGraphQLDataMutators graphQLDataMutators;
 
+    public GraphQLProvider() {
+        this.graphQLDataFetchers = new PostgresGraphQLDataFetchers();
+        this.graphQLDataMutators = new PostgresGraphQLDataMutators();
+    }
+
     @Bean
     public GraphQL songs() { 
         return songs;
