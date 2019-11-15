@@ -22,6 +22,7 @@ public class SongGraphQLDataMutators {
     @Autowired
     private Config config;
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Song> createSongMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");

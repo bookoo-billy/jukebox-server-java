@@ -22,6 +22,7 @@ public class AlbumGraphQLDataMutators {
     @Autowired
     private Config config;
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Song> createSongMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
@@ -67,6 +68,7 @@ public class AlbumGraphQLDataMutators {
         };
     }
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Artist> createArtistMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
@@ -91,6 +93,7 @@ public class AlbumGraphQLDataMutators {
         };
     }
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Album> createAlbumMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");

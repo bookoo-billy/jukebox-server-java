@@ -20,6 +20,7 @@ public class ArtistGraphQLDataMutators {
     @Autowired
     private Config config;
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Artist> createArtistMutator() {
         return dataFetchingEnvironment -> {
             Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
