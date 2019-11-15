@@ -1,26 +1,26 @@
-package com.bookoo.jukeboxserver.songdetails;
+package com.bookoo.jukeboxserver.albumdetails;
 
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.UUID;
 
+import com.bookoo.jukeboxserver.config.Config;
 import com.bookoo.jukeboxserver.domain.Album;
 import com.bookoo.jukeboxserver.domain.Artist;
 import com.bookoo.jukeboxserver.domain.Song;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import graphql.schema.DataFetcher;
 
 @Component
-public class PostgresGraphQLDataMutators {
+public class AlbumGraphQLDataMutators {
 
-    private static final String url = "jdbc:postgresql://192.168.99.100:5432/jukebox";
-    private static final String user = "jukebox";
-    private static final String password = "example";
+    @Autowired
+    private Config config;
 
     public DataFetcher<Song> createSongMutator() {
         return dataFetchingEnvironment -> {
@@ -32,7 +32,7 @@ public class PostgresGraphQLDataMutators {
             Integer track = (Integer) map.get("track");
 
             try {
-                PreparedStatement pStatSongs = DriverManager.getConnection(url, user, password)
+                PreparedStatement pStatSongs = config.dbConnection()
                                                         .prepareStatement("INSERT INTO songs(name, artistid, albumid, track) VALUES (?, ?::uuid, ?::uuid, ?) RETURNING *");
 
                 pStatSongs.setString(1, name);
@@ -43,7 +43,7 @@ public class PostgresGraphQLDataMutators {
                 if (pStatSongs.execute()) {
                     ResultSet rSet = pStatSongs.getResultSet();
                     if (rSet.next()) {
-                        PreparedStatement pStatAlbumSongs = DriverManager.getConnection(url, user, password)
+                        PreparedStatement pStatAlbumSongs = config.dbConnection()
                                                                     .prepareStatement("INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) RETURNING *");
                         pStatAlbumSongs.setString(1, albumId);
                         pStatAlbumSongs.setString(2, rSet.getString("id"));
@@ -52,7 +52,7 @@ public class PostgresGraphQLDataMutators {
                             return new Song(
                                 UUID.fromString(rSet.getString("id")),
                                 rSet.getString("name"),
-                                new Album(UUID.fromString(albumId), null, null),
+                                new Album(UUID.fromString(albumId), null, null, null),
                                 new Artist(UUID.fromString(artistId), null, null, null),
                                 rSet.getInt("track")
                             );
@@ -73,8 +73,8 @@ public class PostgresGraphQLDataMutators {
             String name = (String) map.get("name");
 
             try {
-                PreparedStatement pStat = DriverManager.getConnection(url, user, password)
-                                                        .prepareStatement("INSERT INTO artists(name) VALUES (?) RETURNING *");
+                PreparedStatement pStat = config.dbConnection()
+                                                .prepareStatement("INSERT INTO artists(name) VALUES (?) RETURNING *");
                 pStat.setString(1, name);
 
                 if (pStat.execute()) {
@@ -98,15 +98,15 @@ public class PostgresGraphQLDataMutators {
             String artistId = (String) map.get("artistId");
 
             try {
-                PreparedStatement pStat = DriverManager.getConnection(url, user, password)
-                                                        .prepareStatement("INSERT INTO albums(name, artistid) VALUES (?, ?::uuid) RETURNING *");
+                PreparedStatement pStat = config.dbConnection()
+                                                .prepareStatement("INSERT INTO albums(name, artistid) VALUES (?, ?::uuid) RETURNING *");
                 pStat.setString(1, name);
                 pStat.setString(2, artistId);
 
                 if (pStat.execute()) {
                     ResultSet rSet = pStat.getResultSet();
                     if (rSet.next()) {
-                        return new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null);
+                        return new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null);
                     }
                 }
 

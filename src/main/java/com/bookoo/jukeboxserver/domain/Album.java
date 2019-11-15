@@ -6,12 +6,14 @@ import java.util.UUID;
 public class Album {
     private UUID id;
     private String name;
-    private List<Album> albums;
+    private List<Song> songs;
+    private Artist artist;
 
-    public Album(UUID id, String name, List<Album> albums) {
+    public Album(UUID id, String name, List<Song> songs, Artist artist) {
         this.id = id;
         this.name = name;
-        this.albums = albums;
+        this.songs = songs;
+        this.artist = artist;
     }
 
     public UUID getId() {
@@ -30,21 +32,30 @@ public class Album {
         this.name = name;
     }
 
-    public List<Album> getAlbums() {
-        return albums;
+    public List<Song> getSongs() {
+        return songs;
     }
 
-    public void setAlbums(List<Album> albums) {
-        this.albums = albums;
+    public void setSongs(List<Song> songs) {
+        this.songs = songs;
+    }
+
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public void setArtist(Artist artist) {
+        this.artist = artist;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((albums == null) ? 0 : albums.hashCode());
+        result = prime * result + ((songs == null) ? 0 : songs.hashCode());
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((artist == null) ? 0 : artist.hashCode());
         return result;
     }
 
@@ -57,10 +68,10 @@ public class Album {
         if (getClass() != obj.getClass())
             return false;
         Album other = (Album) obj;
-        if (albums == null) {
-            if (other.albums != null)
+        if (songs == null) {
+            if (other.songs != null)
                 return false;
-        } else if (!albums.equals(other.albums))
+        } else if (!songs.equals(other.songs))
             return false;
         if (name == null) {
             if (other.name != null)
@@ -72,11 +83,16 @@ public class Album {
                 return false;
         } else if (!id.equals(other.id))
             return false;
+        if (artist == null) {
+            if (other.artist != null)
+                return false;
+        } else if (!artist.equals(other.artist))
+            return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "Album [albums=" + albums + ", name=" + name + ", id=" + id + "]";
+        return "Album [songs=" + songs + ", name=" + name + ", id=" + id + ", artist=" + artist + "]";
     }
 }

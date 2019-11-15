@@ -1,4 +1,4 @@
-package com.bookoo.jukeboxserver.songdetails;
+package com.bookoo.jukeboxserver.indexing;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -8,6 +8,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
 
+import com.bookoo.jukeboxserver.GraphQLProvider;
 import com.mpatric.mp3agic.ID3v1;
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.InvalidDataException;
@@ -95,7 +96,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> {
     }
 
     private String createArtist(String name) {
-        Map<String, Map<String, String>> result = graphQlProvider.songs().execute(
+        Map<String, Map<String, String>> result = graphQlProvider.jukebox().execute(
             ExecutionInput.newExecutionInput().query(
                 "mutation { " +
                     "createArtist(input:{ " +
@@ -108,7 +109,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> {
     }
 
     private String createAlbum(String name, String artistId) {
-        Map<String, Map<String, String>> result = graphQlProvider.songs().execute(
+        Map<String, Map<String, String>> result = graphQlProvider.jukebox().execute(
             ExecutionInput.newExecutionInput().query(
                 "mutation { " +
                     "createAlbum(input:{ " +
@@ -122,7 +123,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> {
     }
 
     private void createSong(String name, String artistId, String albumId, Integer track) {
-        graphQlProvider.songs().execute(
+        graphQlProvider.jukebox().execute(
             ExecutionInput.newExecutionInput().query(
                 "mutation { " +
                     "createSong(input:{ " +
