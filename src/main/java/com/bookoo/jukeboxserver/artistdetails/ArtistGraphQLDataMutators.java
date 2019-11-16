@@ -28,8 +28,9 @@ public class ArtistGraphQLDataMutators {
 
             try {
                 PreparedStatement pStat = config.dbConnection()
-                                                .prepareStatement("INSERT INTO artists(name) VALUES (?) RETURNING *");
+                                                .prepareStatement("INSERT INTO artists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
                 pStat.setString(1, name);
+                pStat.setString(2, name);
 
                 if (pStat.execute()) {
                     ResultSet rSet = pStat.getResultSet();
@@ -38,7 +39,7 @@ public class ArtistGraphQLDataMutators {
                     }
                 }
 
-                throw new RuntimeException("Unknown error while adding song");
+                throw new RuntimeException("Unknown error while adding song: " + pStat.getResultSet());
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

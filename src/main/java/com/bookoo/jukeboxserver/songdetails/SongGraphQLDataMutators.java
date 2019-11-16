@@ -3,6 +3,7 @@ package com.bookoo.jukeboxserver.songdetails;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Map;
 import java.util.UUID;
 
@@ -34,18 +35,33 @@ public class SongGraphQLDataMutators {
 
             try {
                 PreparedStatement pStatSongs = config.dbConnection()
-                                                        .prepareStatement("INSERT INTO songs(name, artistid, albumid, track) VALUES (?, ?::uuid, ?::uuid, ?) RETURNING *");
+                                                        .prepareStatement("INSERT INTO songs(name, artistid, albumid, track) VALUES (?, ?::uuid, ?::uuid, ?) ON CONFLICT (name, artistid, albumid) DO UPDATE SET name=?, artistid=?::uuid, albumid=?::uuid, track=? RETURNING *");
 
                 pStatSongs.setString(1, name);
                 pStatSongs.setString(2, artistId);
                 pStatSongs.setString(3, albumId);
-                pStatSongs.setInt(4, track);
+
+                if (track == null) {
+                    pStatSongs.setNull(4, Types.INTEGER);
+                } else {
+                    pStatSongs.setInt(4, track);
+                }
+
+                pStatSongs.setString(5, name);
+                pStatSongs.setString(6, artistId);
+                pStatSongs.setString(7, albumId);
+
+                if (track == null) {
+                    pStatSongs.setNull(8, Types.INTEGER);
+                } else {
+                    pStatSongs.setInt(8, track);
+                }
 
                 if (pStatSongs.execute()) {
                     ResultSet rSet = pStatSongs.getResultSet();
                     if (rSet.next()) {
                         PreparedStatement pStatAlbumSongs = config.dbConnection()
-                                                                    .prepareStatement("INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) RETURNING *");
+                                                                    .prepareStatement("INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) ON CONFLICT DO NOTHING RETURNING *");
                         pStatAlbumSongs.setString(1, albumId);
                         pStatAlbumSongs.setString(2, rSet.getString("id"));
 

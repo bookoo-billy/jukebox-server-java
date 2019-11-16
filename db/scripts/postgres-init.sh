@@ -16,7 +16,8 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         id uuid DEFAULT uuid_generate_v4(),
         name VARCHAR(500) NOT NULL,
         artistid uuid REFERENCES artists(id),
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+        UNIQUE (name, artistid)
     );
 
     CREATE TABLE IF NOT EXISTS songs (
