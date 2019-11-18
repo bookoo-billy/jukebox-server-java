@@ -9,6 +9,13 @@ public class Artist {
     private Set<Album> albums;
     private Set<Song> songs;
 
+    public Artist() {
+        this.id = null;
+        this.name = null;
+        this.albums = null;
+        this.songs = null;
+    }
+
     public Artist(UUID id, String name, Set<Album> albums, Set<Song> songs) {
         this.id = id;
         this.name = name;

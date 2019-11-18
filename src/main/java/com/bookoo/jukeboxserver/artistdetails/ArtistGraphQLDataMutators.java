@@ -1,13 +1,9 @@
 package com.bookoo.jukeboxserver.artistdetails;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
-import java.util.UUID;
 
-import com.bookoo.jukeboxserver.config.Config;
 import com.bookoo.jukeboxserver.domain.Artist;
+import com.bookoo.jukeboxserver.domain.DAO;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,28 +14,18 @@ import graphql.schema.DataFetcher;
 public class ArtistGraphQLDataMutators {
 
     @Autowired
-    private Config config;
+    private DAO dao;
 
-    @SuppressWarnings("unchecked")
     public DataFetcher<Artist> createArtistMutator() {
         return dataFetchingEnvironment -> {
-            Map<String, Object> map = (Map<String, Object>) dataFetchingEnvironment.getArguments().get("input");
-            String name = (String) map.get("name");
+            String name = (String) dataFetchingEnvironment.getArguments().get("name");
 
             try {
-                PreparedStatement pStat = config.dbConnection()
-                                                .prepareStatement("INSERT INTO artists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
-                pStat.setString(1, name);
-                pStat.setString(2, name);
+                Artist artist = dao.createArtist(name);
 
-                if (pStat.execute()) {
-                    ResultSet rSet = pStat.getResultSet();
-                    if (rSet.next()) {
-                        return new Artist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null);
-                    }
-                }
+                if (artist != null) return artist;
 
-                throw new RuntimeException("Unknown error while adding song: " + pStat.getResultSet());
+                throw new RuntimeException("Unknown error while adding song");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

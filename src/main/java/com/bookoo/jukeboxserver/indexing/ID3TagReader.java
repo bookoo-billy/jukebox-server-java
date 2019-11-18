@@ -6,32 +6,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Map;
+import java.sql.SQLException;
 
-import com.bookoo.jukeboxserver.GraphQLProvider;
+import com.bookoo.jukeboxserver.domain.Album;
+import com.bookoo.jukeboxserver.domain.Artist;
+import com.bookoo.jukeboxserver.domain.DAO;
 import com.mpatric.mp3agic.ID3v1;
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.InvalidDataException;
 import com.mpatric.mp3agic.Mp3File;
 import com.mpatric.mp3agic.UnsupportedTagException;
 
-import graphql.ExecutionInput;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
 
-public class ID3TagReader extends SimpleFileVisitor<Path> {
-    private GraphQLProvider graphQlProvider;
+@Component
+public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLineRunner {
 
-    public ID3TagReader() {
-        this.graphQlProvider = new GraphQLProvider();
-        try {
-            this.graphQlProvider.init();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public static void main(String[] args) throws IOException {
-        Path startingDir = Path.of("C:\\Users\\Will\\Music");
-        ID3TagReader id3TagReader = new ID3TagReader();
-        Files.walkFileTree(startingDir, id3TagReader);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ID3TagReader.class);
+
+    private DAO dao;
+
+    public ID3TagReader(@Autowired DAO dao) {
+        this.dao = dao;
     }
 
     @Override
@@ -41,43 +41,48 @@ public class ID3TagReader extends SimpleFileVisitor<Path> {
             try {
                 mp3File = new Mp3File(file);
             } catch (UnsupportedTagException e) {
-                //Ignore for now
+                // Ignore for now
                 return FileVisitResult.CONTINUE;
             } catch (InvalidDataException e) {
-                //Ignore for now
+                // Ignore for now
                 return FileVisitResult.CONTINUE;
             } catch (IOException e) {
-                //Ignore for now
+                // Ignore for now
                 return FileVisitResult.CONTINUE;
             }
 
             if (mp3File.hasId3v1Tag()) {
                 ID3v1 tag = mp3File.getId3v1Tag();
 
-                String artistId = createArtist(tag.getArtist());
-                String albumId = createAlbum(tag.getAlbum(), artistId);
-                Integer track;
                 try {
-                    track = Integer.parseInt(tag.getTrack());
-                } catch (NumberFormatException e) {
-                    track = 0;
+                    Artist artist = dao.createArtist(tag.getArtist());
+                    Album album = dao.createAlbum(tag.getAlbum(), artist);
+                    Integer track;
+                    try {
+                        track = Integer.parseInt(tag.getTrack());
+                    } catch (NumberFormatException e) {
+                        track = 0;
+                    }
+                    dao.createSong(tag.getTitle(), artist, album, track);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
-                createSong(tag.getTitle(), artistId, albumId, track);
-                System.out.println(tag.getArtist() + " - " + tag.getTitle());
             } else if (mp3File.hasId3v2Tag()) {
                 ID3v2 tag = mp3File.getId3v2Tag();
-                String artistId = createArtist(tag.getArtist());
-                String albumId = createAlbum(tag.getAlbum(), artistId);
-                Integer track;
+
                 try {
-                    track = Integer.parseInt(tag.getTrack());
-                } catch (NumberFormatException e) {
-                    track = 0;
+                    Artist artist = dao.createArtist(tag.getArtist());
+                    Album album = dao.createAlbum(tag.getAlbum(), artist);
+                    Integer track;
+                    try {
+                        track = Integer.parseInt(tag.getTrack());
+                    } catch (NumberFormatException e) {
+                        track = 0;
+                    }
+                    dao.createSong(tag.getTitle(), artist, album, track);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
-                createSong(tag.getTitle(), artistId, albumId, track);
-                System.out.println(tag.getArtist() + " - " + tag.getTitle());
-            } else if (mp3File.hasCustomTag()) {
-                System.out.println(mp3File.getCustomTag());
             }
         }
 
@@ -91,47 +96,18 @@ public class ID3TagReader extends SimpleFileVisitor<Path> {
 
     @Override
     public FileVisitResult visitFileFailed(Path file, IOException exc) {
-        System.err.println(exc);
         return FileVisitResult.CONTINUE;
     }
 
-    private String createArtist(String name) {
-        Map<String, Map<String, String>> result = graphQlProvider.jukebox().execute(
-            ExecutionInput.newExecutionInput().query(
-                "mutation { " +
-                    "createArtist(input:{ " +
-                        "name:\"" + name + "\" " +
-                    "}) { " +
-                        "id " +
-                    "} " +
-                "}").build()).getData();
-        return result.get("createArtist").get("id");
-    }
+    @Override
+    public void run(String... args) throws Exception {
+        Path startingDir = Path.of(args[0]);
+        ID3TagReader id3TagReader = new ID3TagReader(dao);
 
-    private String createAlbum(String name, String artistId) {
-        Map<String, Map<String, String>> result = graphQlProvider.jukebox().execute(
-            ExecutionInput.newExecutionInput().query(
-                "mutation { " +
-                    "createAlbum(input:{ " +
-                        "name:\"" + name + "\" " +
-                        "artistId:\"" + artistId + "\" " +
-                    "}) { " +
-                        "id " +
-                    "} " +
-                "}").build()).getData();
-        return result.get("createAlbum").get("id");
-    }
+        LOGGER.info("Started indexing songs from local directory " + startingDir);
 
-    private void createSong(String name, String artistId, String albumId, Integer track) {
-        graphQlProvider.jukebox().execute(
-            ExecutionInput.newExecutionInput().query(
-                "mutation { " +
-                    "createSong(input:{ " +
-                        "name:\"" + name + "\" " +
-                        "artistId: \"" + artistId + "\" " +
-                        "albumId: \"" + albumId + "\" " +
-                        "track: " + track + " " +
-                    "}) { id } " +
-                "}").build()).getData();
+        Files.walkFileTree(startingDir, id3TagReader);
+
+        LOGGER.info("Finished indexing songs from local directory " + startingDir);
     }
 }
