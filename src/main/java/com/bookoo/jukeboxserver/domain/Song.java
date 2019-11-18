@@ -1,5 +1,6 @@
 package com.bookoo.jukeboxserver.domain;
 
+import java.net.URI;
 import java.util.UUID;
 
 public class Song {
@@ -8,13 +9,15 @@ public class Song {
     private Album album;
     private Artist artist;
     private Integer track;
+    private URI uri;
 
-    public Song(UUID id, String name, Album album, Artist artist, Integer track) {
+    public Song(UUID id, String name, Album album, Artist artist, Integer track, URI uri) {
         this.id = id;
         this.name = name;
         this.album = album;
         this.artist = artist;
         this.track = track;
+        this.uri = uri;
     }
 
     public UUID getUuid() {
@@ -57,6 +60,14 @@ public class Song {
         this.track = track;
     }
 
+    public URI getUri() {
+        return uri;
+    }
+
+    public void setUri(URI uri) {
+        this.uri = uri;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -66,6 +77,7 @@ public class Song {
         result = prime * result + ((name == null) ? 0 : name.hashCode());
         result = prime * result + ((track == null) ? 0 : track.hashCode());
         result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((uri == null) ? 0 : uri.hashCode());
         return result;
     }
 
@@ -103,12 +115,17 @@ public class Song {
                 return false;
         } else if (!id.equals(other.id))
             return false;
+        if (uri == null) {
+            if (other.uri != null)
+                return false;
+        } else if (!uri.equals(other.uri))
+            return false;
         return true;
     }
 
     @Override
     public String toString() {
         return "Song [album=" + album + ", artist=" + artist + ", name=" + name + ", track=" + track + ", id=" + id
-                + "]";
+                + ", uri=" + uri + "]";
     }
 }

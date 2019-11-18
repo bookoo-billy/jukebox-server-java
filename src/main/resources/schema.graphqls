@@ -11,10 +11,11 @@ type Mutation {
 }
 
 input SongInput {
-    name: String,
-    artistId: String,
-    albumId: String,
+    name: String
+    artistId: String
+    albumId: String
     track: Int
+    uri: String
 }
 
 input ArtistInput {
@@ -22,7 +23,7 @@ input ArtistInput {
 }
 
 input AlbumInput {
-    name: String,
+    name: String
     artistId: String
 }
 
@@ -32,6 +33,7 @@ type Song {
     artist: Artist
     album: Album
     track: Int
+    uri: String
 }
 
 type Artist {

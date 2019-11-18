@@ -1,5 +1,6 @@
 package com.bookoo.jukeboxserver.domain;
 
+import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,9 +56,9 @@ public class DAO {
         return createAlbum(name, artist.getId().toString());
     }
 
-	public Song createSong(String name, String artistId, String albumId, Integer track) throws SQLException {
+	public Song createSong(String name, String artistId, String albumId, Integer track, URI uri) throws SQLException {
         PreparedStatement pStatSongs = config.dbConnection()
-                                                .prepareStatement("INSERT INTO songs(name, artistid, albumid, track) VALUES (?, ?::uuid, ?::uuid, ?) ON CONFLICT (name, artistid, albumid) DO UPDATE SET name=?, artistid=?::uuid, albumid=?::uuid, track=? RETURNING *");
+                                                .prepareStatement("INSERT INTO songs(name, artistid, albumid, track, uri) VALUES (?, ?::uuid, ?::uuid, ?, ?) ON CONFLICT (name, artistid, albumid) DO UPDATE SET name=?, artistid=?::uuid, albumid=?::uuid, track=?, uri=? RETURNING *");
 
         pStatSongs.setString(1, name);
         pStatSongs.setString(2, artistId);
@@ -69,15 +70,19 @@ public class DAO {
             pStatSongs.setInt(4, track);
         }
 
-        pStatSongs.setString(5, name);
-        pStatSongs.setString(6, artistId);
-        pStatSongs.setString(7, albumId);
+        pStatSongs.setString(5, uri.toString());
+
+        pStatSongs.setString(6, name);
+        pStatSongs.setString(7, artistId);
+        pStatSongs.setString(8, albumId);
 
         if (track == null) {
-            pStatSongs.setNull(8, Types.INTEGER);
+            pStatSongs.setNull(9, Types.INTEGER);
         } else {
-            pStatSongs.setInt(8, track);
+            pStatSongs.setInt(9, track);
         }
+
+        pStatSongs.setString(10, uri.toString());
 
         if (pStatSongs.execute()) {
             ResultSet rSet = pStatSongs.getResultSet();
@@ -93,7 +98,8 @@ public class DAO {
                         rSet.getString("name"),
                         new Album(UUID.fromString(albumId), null, null, null),
                         new Artist(UUID.fromString(artistId), null, null, null),
-                        rSet.getInt("track")
+                        rSet.getInt("track"),
+                        URI.create(rSet.getString("uri"))
                     );
                 }
             }
@@ -102,7 +108,7 @@ public class DAO {
         return null;
     }
 
-    public Song createSong(String name, Artist artist, Album album, Integer track) throws SQLException {
-        return createSong(name, artist.getId().toString(), album.getId().toString(), track);
+    public Song createSong(String name, Artist artist, Album album, Integer track, URI uri) throws SQLException {
+        return createSong(name, artist.getId().toString(), album.getId().toString(), track, uri);
     }
 }

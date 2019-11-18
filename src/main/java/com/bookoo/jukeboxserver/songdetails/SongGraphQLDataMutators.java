@@ -1,5 +1,6 @@
 package com.bookoo.jukeboxserver.songdetails;
 
+import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -26,9 +27,10 @@ public class SongGraphQLDataMutators {
             String artistId = (String) map.get("artistId");
             String albumId = (String) map.get("albumId");
             Integer track = (Integer) map.get("track");
+            URI uri = URI.create((String) map.get("uri"));
 
             try {
-                Song song = dao.createSong(name, artistId, albumId, track);
+                Song song = dao.createSong(name, artistId, albumId, track, uri);
 
                 if (song != null) return song;
 

@@ -63,7 +63,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
                     } catch (NumberFormatException e) {
                         track = 0;
                     }
-                    dao.createSong(tag.getTitle(), artist, album, track);
+                    dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -79,7 +79,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
                     } catch (NumberFormatException e) {
                         track = 0;
                     }
-                    dao.createSong(tag.getTitle(), artist, album, track);
+                    dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }

@@ -1,5 +1,6 @@
 package com.bookoo.jukeboxserver.songdetails;
 
+import java.net.URI;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,7 +28,7 @@ public class SongGraphQLDataFetchers {
 
             try {
                 PreparedStatement pStat = config.dbConnection()
-                                                .prepareStatement("SELECT id, name, track, artistid, albumid FROM songs WHERE songs.id=?::uuid");
+                                                .prepareStatement("SELECT id, name, track, artistid, albumid, uri FROM songs WHERE songs.id=?::uuid");
                 pStat.setString(1, songId);
 
                 ResultSet rSet = pStat.executeQuery();
@@ -38,7 +39,8 @@ public class SongGraphQLDataFetchers {
                         rSet.getString("name"),
                         new Album(UUID.fromString(rSet.getString("albumid")), null, null, null),
                         new Artist(UUID.fromString(rSet.getString("artistid")), null, null, null),
-                        rSet.getInt("track")
+                        rSet.getInt("track"),
+                        URI.create(rSet.getString("uri"))
                     );
                 }
 

@@ -26,6 +26,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         track SMALLINT,
         artistid uuid REFERENCES artists(id),
         albumid uuid REFERENCES albums(id),
+        uri VARCHAR(1000),
         PRIMARY KEY (id),
         UNIQUE (name, artistid, albumid)
     );
