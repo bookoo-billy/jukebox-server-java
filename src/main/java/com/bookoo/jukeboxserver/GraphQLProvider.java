@@ -9,6 +9,8 @@ import com.bookoo.jukeboxserver.albumdetails.AlbumGraphQLDataFetchers;
 import com.bookoo.jukeboxserver.albumdetails.AlbumGraphQLDataMutators;
 import com.bookoo.jukeboxserver.artistdetails.ArtistGraphQLDataFetchers;
 import com.bookoo.jukeboxserver.artistdetails.ArtistGraphQLDataMutators;
+import com.bookoo.jukeboxserver.playlistdetails.PlaylistGraphQLDataFetchers;
+import com.bookoo.jukeboxserver.playlistdetails.PlaylistGraphQLDataMutators;
 import com.bookoo.jukeboxserver.songdetails.SongGraphQLDataFetchers;
 import com.bookoo.jukeboxserver.songdetails.SongGraphQLDataMutators;
 import com.google.common.base.Charsets;
@@ -49,6 +51,12 @@ public class GraphQLProvider {
     @Autowired
     private AlbumGraphQLDataMutators albumMutators;
 
+    @Autowired
+    private PlaylistGraphQLDataFetchers playlistFetchers;
+
+    @Autowired
+    private PlaylistGraphQLDataMutators playlistMutators;
+
     public GraphQLProvider() {
         this.songFetchers = new SongGraphQLDataFetchers();
         this.songMutators = new SongGraphQLDataMutators();
@@ -83,7 +91,8 @@ public class GraphQLProvider {
                     .type(TypeRuntimeWiring.newTypeWiring("Query")
                             .dataFetcher("songById", songFetchers.getSongByIdDataFetcher())
                             .dataFetcher("artistById", artistFetchers.getArtistByIdDataFetcher())
-                            .dataFetcher("albumById", albumFetchers.getAlbumByIdDataFetcher()))
+                            .dataFetcher("albumById", albumFetchers.getAlbumByIdDataFetcher())
+                            .dataFetcher("playlistById", playlistFetchers.getPlaylistByIdDataFetcher()))
                     .type(TypeRuntimeWiring.newTypeWiring("Song")
                             .dataFetcher("artist", songFetchers.getArtistOfSongDataFetcher())
                             .dataFetcher("album", songFetchers.getAlbumOfSongDataFetcher()))
@@ -93,10 +102,15 @@ public class GraphQLProvider {
                     .type(TypeRuntimeWiring.newTypeWiring("Album")
                             .dataFetcher("artist", albumFetchers.getArtistOfAlbumDataFetcher())
                             .dataFetcher("songs", albumFetchers.getSongsOfAlbumDataFetcher()))
+                    .type(TypeRuntimeWiring.newTypeWiring("Playlist")
+                            .dataFetcher("songs", playlistFetchers.getSongsOfPlaylistDataFetcher()))
                     .type(TypeRuntimeWiring.newTypeWiring("Mutation")
                             .dataFetcher("createSong", songMutators.createSongMutator())
                             .dataFetcher("createArtist", artistMutators.createArtistMutator())
-                            .dataFetcher("createAlbum", albumMutators.createAlbumMutator()))
+                            .dataFetcher("createAlbum", albumMutators.createAlbumMutator())
+                            .dataFetcher("createPlaylist", playlistMutators.createPlaylistMutator())
+                            .dataFetcher("addSongToPlaylist", playlistMutators.addSongToPlaylistMutator())
+                            .dataFetcher("removeSongFromPlaylist", playlistMutators.removeSongFromPlaylistMutator()))
                     .build();
     }
 }

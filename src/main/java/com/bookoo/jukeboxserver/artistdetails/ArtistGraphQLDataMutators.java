@@ -1,6 +1,7 @@
 package com.bookoo.jukeboxserver.artistdetails;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 import com.bookoo.jukeboxserver.domain.Artist;
 import com.bookoo.jukeboxserver.domain.DAO;
@@ -16,10 +17,11 @@ public class ArtistGraphQLDataMutators {
     @Autowired
     private DAO dao;
 
+    @SuppressWarnings("unchecked")
     public DataFetcher<Artist> createArtistMutator() {
         return dataFetchingEnvironment -> {
-            String name = (String) dataFetchingEnvironment.getArguments().get("name");
-
+            Map<String, String> map = (Map<String, String>) dataFetchingEnvironment.getArguments().get("input");
+            String name = map.get("name");
             try {
                 Artist artist = dao.createArtist(name);
 

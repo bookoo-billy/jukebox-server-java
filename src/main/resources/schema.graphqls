@@ -2,12 +2,16 @@ type Query {
     songById(id: ID): Song
     artistById(id: ID): Artist
     albumById(id: ID): Album
+    playlistById(id: ID): Playlist
 }
 
 type Mutation {
     createSong(input: SongInput): Song
     createArtist(input: ArtistInput): Artist
     createAlbum(input: AlbumInput): Album
+    createPlaylist(input: PlaylistInput): Playlist
+    addSongToPlaylist(playlistId: ID, songId: ID): Playlist
+    removeSongFromPlaylist(playlistId: ID, song: SongInput): Playlist
 }
 
 input SongInput {
@@ -25,6 +29,10 @@ input ArtistInput {
 input AlbumInput {
     name: String
     artistId: String
+}
+
+input PlaylistInput {
+    name: String
 }
 
 type Song {
@@ -47,5 +55,11 @@ type Album {
     id: ID
     name: String
     artist: Artist
+    songs: [Song]
+}
+
+type Playlist {
+    id: ID
+    name: String
     songs: [Song]
 }

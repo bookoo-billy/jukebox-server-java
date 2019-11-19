@@ -37,5 +37,19 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         PRIMARY KEY (albumid, songid)
     );
 
+    CREATE TABLE IF NOT EXISTS playlists (
+        id uuid DEFAULT uuid_generate_v4(),
+        name VARCHAR(500) NOT NULL,
+        PRIMARY KEY (id),
+        UNIQUE (name)
+    );
+
+    CREATE TABLE IF NOT EXISTS playlistsongs (
+        playlistid uuid REFERENCES playlists(id),
+        songid uuid REFERENCES songs(id),
+        inserttime timestamp DEFAULT now(),
+        PRIMARY KEY (playlistid, songid)
+    );
+
     GRANT ALL PRIVILEGES ON DATABASE jukebox TO jukebox;
 EOSQL

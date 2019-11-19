@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.UUID;
 
 import com.bookoo.jukeboxserver.config.Config;
@@ -111,4 +112,19 @@ public class DAO {
     public Song createSong(String name, Artist artist, Album album, Integer track, URI uri) throws SQLException {
         return createSong(name, artist.getId().toString(), album.getId().toString(), track, uri);
     }
+
+	public Playlist createPlaylist(String name) throws SQLException {
+        PreparedStatement pStat = config.dbConnection()
+                                        .prepareStatement("INSERT INTO playlists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
+        pStat.setString(1, name);
+        pStat.setString(2, name);
+
+        if (pStat.execute()) {
+            ResultSet rSet = pStat.getResultSet();
+            if (rSet.next()) {
+                return new Playlist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null);
+            }
+        }
+
+        return null;	}
 }
