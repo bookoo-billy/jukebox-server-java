@@ -22,8 +22,8 @@ public class DAO {
     private Config config;
 
     public Artist createArtist(String name) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("INSERT INTO artists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "INSERT INTO artists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
         pStat.setString(1, name);
         pStat.setString(2, name);
 
@@ -37,9 +37,9 @@ public class DAO {
         return null;
     }
 
-	public Album createAlbum(String name, String artistId) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("INSERT INTO albums(name, artistid) VALUES (?, ?::uuid) ON CONFLICT (name, artistid) DO UPDATE SET name=?, artistid=?::uuid RETURNING *");
+    public Album createAlbum(String name, String artistId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "INSERT INTO albums(name, artistid) VALUES (?, ?::uuid) ON CONFLICT (name, artistid) DO UPDATE SET name=?, artistid=?::uuid RETURNING *");
         pStat.setString(1, name);
         pStat.setString(2, artistId);
         pStat.setString(3, name);
@@ -53,15 +53,15 @@ public class DAO {
         }
 
         return null;
-	}
+    }
 
     public Album createAlbum(String name, Artist artist) throws SQLException {
         return createAlbum(name, artist.getId().toString());
     }
 
-	public Song createSong(String name, String artistId, String albumId, Integer track, URI uri) throws SQLException {
-        PreparedStatement pStatSongs = config.dbConnection()
-                                                .prepareStatement("INSERT INTO songs(name, artistid, albumid, track, uri) VALUES (?, ?::uuid, ?::uuid, ?, ?) ON CONFLICT (name, artistid, albumid) DO UPDATE SET name=?, artistid=?::uuid, albumid=?::uuid, track=?, uri=? RETURNING *");
+    public Song createSong(String name, String artistId, String albumId, Integer track, URI uri) throws SQLException {
+        PreparedStatement pStatSongs = config.dbConnection().prepareStatement(
+                "INSERT INTO songs(name, artistid, albumid, track, uri) VALUES (?, ?::uuid, ?::uuid, ?, ?) ON CONFLICT (name, artistid, albumid) DO UPDATE SET name=?, artistid=?::uuid, albumid=?::uuid, track=?, uri=? RETURNING *");
 
         pStatSongs.setString(1, name);
         pStatSongs.setString(2, artistId);
@@ -90,20 +90,16 @@ public class DAO {
         if (pStatSongs.execute()) {
             ResultSet rSet = pStatSongs.getResultSet();
             if (rSet.next()) {
-                PreparedStatement pStatAlbumSongs = config.dbConnection()
-                                    .prepareStatement("INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) ON CONFLICT DO NOTHING RETURNING *");
+                PreparedStatement pStatAlbumSongs = config.dbConnection().prepareStatement(
+                        "INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) ON CONFLICT DO NOTHING RETURNING *");
                 pStatAlbumSongs.setString(1, albumId);
                 pStatAlbumSongs.setString(2, rSet.getString("id"));
 
                 if (pStatAlbumSongs.execute()) {
-                    return new Song(
-                        UUID.fromString(rSet.getString("id")),
-                        rSet.getString("name"),
-                        new Album(UUID.fromString(albumId), null, null, null),
-                        new Artist(UUID.fromString(artistId), null, null, null),
-                        rSet.getInt("track"),
-                        URI.create(rSet.getString("uri"))
-                    );
+                    return new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"),
+                            new Album(UUID.fromString(albumId), null, null, null),
+                            new Artist(UUID.fromString(artistId), null, null, null), rSet.getInt("track"),
+                            URI.create(rSet.getString("uri")));
                 }
             }
         }
@@ -115,9 +111,9 @@ public class DAO {
         return createSong(name, artist.getId().toString(), album.getId().toString(), track, uri);
     }
 
-	public Playlist createPlaylist(String name) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("INSERT INTO playlists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
+    public Playlist createPlaylist(String name) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "INSERT INTO playlists(name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name=? RETURNING *");
         pStat.setString(1, name);
         pStat.setString(2, name);
 
@@ -131,9 +127,9 @@ public class DAO {
         return null;
     }
 
-	public Playlist addSongToPlaylist(String playlistId, String songId) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                            .prepareStatement("INSERT INTO playlistsongs(playlistid, songid) VALUES(?::uuid, ?::uuid) ON CONFLICT (playlistid, songid, inserttime) DO UPDATE SET playlistid=?::uuid, songid=?::uuid RETURNING *");
+    public Playlist addSongToPlaylist(String playlistId, String songId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "INSERT INTO playlistsongs(playlistid, songid) VALUES(?::uuid, ?::uuid) ON CONFLICT (playlistid, songid, inserttime) DO UPDATE SET playlistid=?::uuid, songid=?::uuid RETURNING *");
 
         pStat.setString(1, playlistId);
         pStat.setString(2, songId);
@@ -148,11 +144,11 @@ public class DAO {
         }
 
         return null;
-	}
+    }
 
-	public Playlist removeSongFromPlaylist(String playlistId, String songId, String timestamp) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                            .prepareStatement("DELETE FROM playlistsongs WHERE playlistid=?::uuid AND songid=?::uuid AND inserttime=? RETURNING *");
+    public Playlist removeSongFromPlaylist(String playlistId, String songId, String timestamp) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "DELETE FROM playlistsongs WHERE playlistid=?::uuid AND songid=?::uuid AND inserttime=? RETURNING *");
 
         pStat.setString(1, playlistId);
         pStat.setString(2, songId);
@@ -169,56 +165,40 @@ public class DAO {
     }
 
     public Playlist getPlaylist(String playlistId) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("SELECT * FROM playlists WHERE id::text=?");
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM playlists WHERE id::text=?");
         pStat.setString(1, playlistId);
 
         ResultSet rSet = pStat.executeQuery();
         if (rSet.next()) {
-            return new Playlist(
-                UUID.fromString(rSet.getString("id")),
-                rSet.getString("name"),
-                null
-            );
+            return new Playlist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null);
         }
 
         return null;
     }
 
-	public List<PlaylistItem> getItemsOfPlaylist(Playlist playlist) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement(
-                                            "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri, playlistsongs.inserttime AS psinserttime " +
-                                            "FROM playlists, playlistsongs, songs " +
-                                            "WHERE playlists.id=?::uuid AND playlistsongs.playlistid=playlists.id AND songs.id = playlistsongs.songid " +
-                                            "ORDER BY inserttime ASC");
+    public List<PlaylistItem> getItemsOfPlaylist(Playlist playlist) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri, playlistsongs.inserttime AS psinserttime "
+                        + "FROM playlists, playlistsongs, songs "
+                        + "WHERE playlists.id=?::uuid AND playlistsongs.playlistid=playlists.id AND songs.id = playlistsongs.songid "
+                        + "ORDER BY inserttime ASC");
         pStat.setString(1, playlist.getId().toString());
 
         ResultSet rSet = pStat.executeQuery();
-        List<PlaylistItem> playlistItems = new ArrayList<> ();
+        List<PlaylistItem> playlistItems = new ArrayList<>();
 
         while (rSet.next()) {
-            playlistItems.add(
-                new PlaylistItem(
-                    new Song(
-                        UUID.fromString(rSet.getString("songid")),
-                        rSet.getString("songname"),
-                        null,
-                        null,
-                        rSet.getInt("songtrack"),
-                        URI.create(rSet.getString("songuri"))
-                    ),
-                    rSet.getObject("psinserttime", LocalDateTime.class)
-                )
-            );
+            playlistItems.add(new PlaylistItem(
+                    new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"), null, null,
+                            rSet.getInt("songtrack"), URI.create(rSet.getString("songuri"))),
+                    rSet.getObject("psinserttime", LocalDateTime.class)));
         }
 
         return playlistItems;
-	}
+    }
 
-	public String getNameOfPlaylist(Playlist playlist) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("SELECT name FROM playlists WHERE id=?::uuid");
+    public String getNameOfPlaylist(Playlist playlist) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT name FROM playlists WHERE id=?::uuid");
         pStat.setString(1, playlist.getId().toString());
 
         ResultSet rSet = pStat.executeQuery();
@@ -228,9 +208,9 @@ public class DAO {
         }
 
         return null;
-	}
+    }
 
-	public Song getSongById(String songId) throws SQLException {
+    public Song getSongById(String songId) throws SQLException {
         PreparedStatement pStat = config.dbConnection()
                 .prepareStatement("SELECT id, name, track, artistid, albumid, uri FROM songs WHERE songs.id=?::uuid");
         pStat.setString(1, songId);
@@ -238,22 +218,17 @@ public class DAO {
         ResultSet rSet = pStat.executeQuery();
 
         if (rSet.next()) {
-            return new Song(
-                UUID.fromString(rSet.getString("id")),
-                rSet.getString("name"),
-                new Album(UUID.fromString(rSet.getString("albumid")), null, null, null),
-                new Artist(UUID.fromString(rSet.getString("artistid")), null, null, null),
-                rSet.getInt("track"),
-                URI.create(rSet.getString("uri"))
-            );
+            return new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"),
+                    new Album(UUID.fromString(rSet.getString("albumid")), null, null, null),
+                    new Artist(UUID.fromString(rSet.getString("artistid")), null, null, null), rSet.getInt("track"),
+                    URI.create(rSet.getString("uri")));
         }
 
         return null;
-	}
+    }
 
-	public Artist getArtistOfSong(Song song) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("SELECT * FROM artists WHERE id::text=?");
+    public Artist getArtistOfSong(Song song) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM artists WHERE id::text=?");
         pStat.setString(1, song.getArtist().getId().toString());
 
         ResultSet rSet = pStat.executeQuery();
@@ -263,24 +238,62 @@ public class DAO {
         }
 
         return null;
-	}
+    }
 
-	public Album getAlbumOfSong(Song song) throws SQLException {
-        PreparedStatement pStat = config.dbConnection()
-                                        .prepareStatement("SELECT * FROM albums WHERE id::text=?");
+    public Album getAlbumOfSong(Song song) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM albums WHERE id::text=?");
         pStat.setString(1, song.getAlbum().getId().toString());
 
         ResultSet rSet = pStat.executeQuery();
 
         if (rSet.next()) {
-            return new Album(
-                UUID.fromString(rSet.getString("id")),
-                rSet.getString("name"),
-                null,
-                new Artist(UUID.fromString(rSet.getString("artistId")), null, null, null)
-            );
+            return new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null,
+                    new Artist(UUID.fromString(rSet.getString("artistId")), null, null, null));
         }
 
         return null;
-	}
+    }
+
+    public Artist getArtistById(String artistId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM artists WHERE id::text=?");
+        pStat.setString(1, artistId);
+
+        ResultSet rSet = pStat.executeQuery();
+        if (rSet.next()) {
+            return new Artist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null);
+        }
+
+        return null;
+    }
+
+    public List<Album> getAlbumsOfArtist(Artist artist) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM albums WHERE artistid::text=?");
+        pStat.setString(1, artist.getId().toString());
+
+        ResultSet rSet = pStat.executeQuery();
+        List<Album> albums = new ArrayList<>();
+
+        while (rSet.next()) {
+            albums.add(new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null));
+        }
+
+        return albums;
+    }
+
+    public List<Song> getSongsOfArtist(Artist artist) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri, artists.id AS artistid, artists.name AS artistname, albums.id AS albumid, albums.name as albumname FROM songs, artists, albums WHERE songs.artistid=?::uuid AND songs.artistId = artists.id AND songs.albumId = albums.id");
+        pStat.setString(1, artist.getId().toString());
+
+        ResultSet rSet = pStat.executeQuery();
+        List<Song> songs = new ArrayList<>();
+
+        while (rSet.next()) {
+            songs.add(new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"),
+                    new Album(UUID.fromString(rSet.getString("albumid")), null, null, null), artist,
+                    rSet.getInt("songtrack"), URI.create(rSet.getString("songuri"))));
+        }
+
+        return songs;
+    }
 }
