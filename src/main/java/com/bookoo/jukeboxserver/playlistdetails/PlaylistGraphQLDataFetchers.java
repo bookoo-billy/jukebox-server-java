@@ -3,7 +3,6 @@ package com.bookoo.jukeboxserver.playlistdetails;
 import java.sql.SQLException;
 import java.util.List;
 
-import com.bookoo.jukeboxserver.config.Config;
 import com.bookoo.jukeboxserver.domain.DAO;
 import com.bookoo.jukeboxserver.domain.Playlist;
 import com.bookoo.jukeboxserver.domain.PlaylistItem;

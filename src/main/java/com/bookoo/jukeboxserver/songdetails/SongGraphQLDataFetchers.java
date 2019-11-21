@@ -2,7 +2,6 @@ package com.bookoo.jukeboxserver.songdetails;
 
 import java.sql.SQLException;
 
-import com.bookoo.jukeboxserver.config.Config;
 import com.bookoo.jukeboxserver.domain.Album;
 import com.bookoo.jukeboxserver.domain.Artist;
 import com.bookoo.jukeboxserver.domain.DAO;
