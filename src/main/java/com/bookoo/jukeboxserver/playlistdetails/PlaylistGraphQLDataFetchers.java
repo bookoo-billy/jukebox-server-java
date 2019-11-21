@@ -19,9 +19,6 @@ public class PlaylistGraphQLDataFetchers {
     @Autowired
     private DAO dao;
 
-    @Autowired
-    private Config config;
-
     public DataFetcher<Playlist> getPlaylistByIdDataFetcher() {
         return dataFetchingEnvironment -> {
             String playlistId = dataFetchingEnvironment.getArgument("id");
