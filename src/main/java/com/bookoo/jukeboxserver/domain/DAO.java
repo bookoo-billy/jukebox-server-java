@@ -296,4 +296,47 @@ public class DAO {
 
         return songs;
     }
+
+    public List<Song> getSongsOfAlbum(Album album) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack songs.uri AS songuri FROM songs, albumsongs WHERE songs.albumid=?::uuid AND songs.albumid = albumsongs.albumid");
+        pStat.setString(1, album.getId().toString());
+
+        ResultSet rSet = pStat.executeQuery();
+        List<Song> songs = new ArrayList<>();
+
+        while (rSet.next()) {
+            songs.add(new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"), album, null,
+                    rSet.getInt("songtrack"), URI.create(rSet.getString("songuri"))));
+        }
+
+        return songs;
+    }
+
+    public Artist getArtistOfAlbum(Album album) throws SQLException {
+        PreparedStatement pStat = config.dbConnection()
+                .prepareStatement("SELECT id, name FROM artists WHERE id=?::uuid");
+        pStat.setString(1, album.getArtist().getId().toString());
+
+        ResultSet rSet = pStat.executeQuery();
+
+        if (rSet.next()) {
+            return new Artist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null, null);
+        }
+
+        return null;
+    }
+
+    public Album getAlbumById(String albumId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM albums WHERE id::text=?");
+        pStat.setString(1, albumId);
+
+        ResultSet rSet = pStat.executeQuery();
+        if (rSet.next()) {
+            return new Album(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null,
+                    new Artist(UUID.fromString(rSet.getString("artistId")), null, null, null));
+        }
+
+        return null;
+    }
 }
