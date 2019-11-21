@@ -11,7 +11,7 @@ type Mutation {
     createAlbum(input: AlbumInput): Album
     createPlaylist(input: PlaylistInput): Playlist
     addSongToPlaylist(playlistId: ID, songId: ID): Playlist
-    removeSongFromPlaylist(playlistId: ID, song: SongInput): Playlist
+    removeSongFromPlaylist(playlistId: ID, songId: ID, timestamp: ID): Playlist
 }
 
 input SongInput {
@@ -42,6 +42,7 @@ type Song {
     album: Album
     track: Int
     uri: String
+
 }
 
 type Artist {
@@ -61,5 +62,10 @@ type Album {
 type Playlist {
     id: ID
     name: String
-    songs: [Song]
+    items: [PlaylistItem]
+}
+
+type PlaylistItem {
+    song: Song
+    timestamp: String
 }

@@ -28,7 +28,7 @@ public class PlaylistGraphQLDataMutators {
 
                 if (playlist != null) return playlist;
 
-                throw new RuntimeException("Unknown error while adding song");
+                throw new RuntimeException("Unknown error while creating playlist");
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -37,13 +37,38 @@ public class PlaylistGraphQLDataMutators {
 
 	public DataFetcher<Playlist> addSongToPlaylistMutator() {
 		return dataFetchingEnvironment -> {
-            return null;
+            Map<String, Object> args = dataFetchingEnvironment.getArguments();
+
+            String playlistId = (String) args.get("playlistId");
+            String songId = (String) args.get("songId");
+
+            try {
+                Playlist playlist = dao.addSongToPlaylist(playlistId, songId);
+
+                if (playlist != null) return playlist;
+
+                throw new RuntimeException("Unknown error while adding song");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         };
 	}
 
 	public DataFetcher<Playlist> removeSongFromPlaylistMutator() {
 		return dataFetchingEnvironment -> {
-            return null;
+            Map<String, Object> args = dataFetchingEnvironment.getArguments();
+
+            String playlistId = (String) args.get("playlistId");
+            String songId = (String) args.get("songId");
+            String timestamp = (String) args.get("timestamp");
+
+            try {
+                dao.removeSongFromPlaylist(playlistId, songId, timestamp);
+
+                return dao.getPlaylist(playlistId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         };
 	}
 }

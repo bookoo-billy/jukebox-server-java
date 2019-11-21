@@ -48,7 +48,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         playlistid uuid REFERENCES playlists(id),
         songid uuid REFERENCES songs(id),
         inserttime timestamp DEFAULT now(),
-        PRIMARY KEY (playlistid, songid)
+        PRIMARY KEY (playlistid, songid, inserttime)
     );
 
     GRANT ALL PRIVILEGES ON DATABASE jukebox TO jukebox;

@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.bookoo.jukeboxserver.config.Config;
@@ -126,5 +126,60 @@ public class DAO {
             }
         }
 
-        return null;	}
+        return null;
+    }
+
+	public Playlist addSongToPlaylist(String playlistId, String songId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection()
+                                            .prepareStatement("INSERT INTO playlistsongs(playlistid, songid) VALUES(?::uuid, ?::uuid) ON CONFLICT (playlistid, songid, inserttime) DO UPDATE SET playlistid=?::uuid, songid=?::uuid RETURNING *");
+
+        pStat.setString(1, playlistId);
+        pStat.setString(2, songId);
+        pStat.setString(3, playlistId);
+        pStat.setString(4, songId);
+
+        if (pStat.execute()) {
+            ResultSet rSet = pStat.getResultSet();
+            if (rSet.next()) {
+                return new Playlist(UUID.fromString(rSet.getString("playlistid")), null, null);
+            }
+        }
+
+        return null;
+	}
+
+	public Playlist removeSongFromPlaylist(String playlistId, String songId, String timestamp) throws SQLException {
+        PreparedStatement pStat = config.dbConnection()
+                                            .prepareStatement("DELETE FROM playlistsongs WHERE playlistid=?::uuid AND songid=?::uuid AND inserttime=? RETURNING *");
+
+        pStat.setString(1, playlistId);
+        pStat.setString(2, songId);
+        pStat.setObject(3, LocalDateTime.parse(timestamp));
+
+        if (pStat.execute()) {
+            ResultSet rSet = pStat.getResultSet();
+            if (rSet.next()) {
+                return new Playlist(UUID.fromString(playlistId), null, null);
+            }
+        }
+
+        return null;
+    }
+
+    public Playlist getPlaylist(String playlistId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection()
+                                        .prepareStatement("SELECT * FROM playlists WHERE id::text=?");
+        pStat.setString(1, playlistId);
+
+        ResultSet rSet = pStat.executeQuery();
+        if (rSet.next()) {
+            return new Playlist(
+                UUID.fromString(rSet.getString("id")),
+                rSet.getString("name"),
+                null
+            );
+        }
+
+        return null;
+    }
 }
