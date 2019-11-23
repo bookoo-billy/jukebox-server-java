@@ -95,17 +95,10 @@ public class DAO {
         if (pStatSongs.execute()) {
             ResultSet rSet = pStatSongs.getResultSet();
             if (rSet.next()) {
-                PreparedStatement pStatAlbumSongs = config.dbConnection().prepareStatement(
-                        "INSERT INTO albumsongs(albumid, songid) VALUES (?::uuid, ?::uuid) ON CONFLICT DO NOTHING RETURNING *");
-                pStatAlbumSongs.setString(1, albumId);
-                pStatAlbumSongs.setString(2, rSet.getString("id"));
-
-                if (pStatAlbumSongs.execute()) {
-                    return new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"),
-                            new Album(UUID.fromString(albumId), null, null, null),
-                            new Artist(UUID.fromString(artistId), null, null, null), rSet.getInt("track"),
-                            URI.create(rSet.getString("uri")));
-                }
+                return new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"),
+                        new Album(UUID.fromString(albumId), null, null, null),
+                        new Artist(UUID.fromString(artistId), null, null, null), rSet.getInt("track"),
+                        URI.create(rSet.getString("uri")));
             }
         }
 
@@ -304,7 +297,7 @@ public class DAO {
 
     public List<Song> getSongsOfAlbum(Album album) throws SQLException {
         PreparedStatement pStat = config.dbConnection().prepareStatement(
-                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri FROM songs, albumsongs WHERE songs.albumid=?::uuid AND songs.albumid = albumsongs.albumid");
+                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri FROM songs WHERE songs.albumid=?::uuid");
         pStat.setString(1, album.getId().toString());
 
         ResultSet rSet = pStat.executeQuery();

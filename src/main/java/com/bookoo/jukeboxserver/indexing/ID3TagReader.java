@@ -109,5 +109,7 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
         Files.walkFileTree(startingDir, id3TagReader);
 
         LOGGER.info("Finished indexing songs from local directory " + startingDir);
+
+        dao.refreshSearchIndex();
     }
 }
