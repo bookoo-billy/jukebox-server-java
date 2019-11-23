@@ -9,6 +9,20 @@ public class Album {
     private List<Song> songs;
     private Artist artist;
 
+    public Album() {
+        this.id = null;
+        this.name = null;
+        this.songs = null;
+        this.artist = null;
+    }
+
+    public Album(UUID id) {
+        this.id = id;
+        this.name = null;
+        this.songs = null;
+        this.artist= null;
+    }
+
     public Album(UUID id, String name, List<Song> songs, Artist artist) {
         this.id = id;
         this.name = name;

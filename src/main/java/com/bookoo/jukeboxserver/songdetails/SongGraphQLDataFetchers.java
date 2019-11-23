@@ -1,6 +1,7 @@
 package com.bookoo.jukeboxserver.songdetails;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import com.bookoo.jukeboxserver.domain.Album;
 import com.bookoo.jukeboxserver.domain.Artist;
@@ -53,4 +54,16 @@ public class SongGraphQLDataFetchers {
             }
         };
     }
+
+	public DataFetcher<List<Song>> searchSongsDataFetcher() {
+		return dataFetchingEnvironment -> {
+            String search = dataFetchingEnvironment.getArgument("search");
+
+            try {
+                return dao.searchSongs(search);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        };
+	}
 }

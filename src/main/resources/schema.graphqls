@@ -3,6 +3,7 @@ type Query {
     artistById(id: ID): Artist
     albumById(id: ID): Album
     playlistById(id: ID): Playlist
+    searchSongs(search: String): [Song]
 }
 
 type Mutation {

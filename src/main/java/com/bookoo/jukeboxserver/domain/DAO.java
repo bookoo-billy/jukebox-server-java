@@ -12,11 +12,16 @@ import java.util.UUID;
 
 import com.bookoo.jukeboxserver.config.Config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-@Component()
+@Component
 public class DAO {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DAO.class);
 
     @Autowired
     private Config config;
@@ -299,7 +304,7 @@ public class DAO {
 
     public List<Song> getSongsOfAlbum(Album album) throws SQLException {
         PreparedStatement pStat = config.dbConnection().prepareStatement(
-                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack songs.uri AS songuri FROM songs, albumsongs WHERE songs.albumid=?::uuid AND songs.albumid = albumsongs.albumid");
+                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri FROM songs, albumsongs WHERE songs.albumid=?::uuid AND songs.albumid = albumsongs.albumid");
         pStat.setString(1, album.getId().toString());
 
         ResultSet rSet = pStat.executeQuery();
@@ -338,5 +343,26 @@ public class DAO {
         }
 
         return null;
+    }
+
+    public List<Song> searchSongs(String search) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM search_index WHERE document @@ plainto_tsquery(?)");
+        pStat.setString(1, search);
+
+        ResultSet rSet = pStat.executeQuery();
+        ArrayList<Song> songs = new ArrayList<> ();
+
+        while (rSet.next()) {
+            songs.add(new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"), new Album(UUID.fromString(rSet.getString("albumId"))), new Artist(UUID.fromString(rSet.getString("artistid"))), rSet.getInt("songtrack"), URI.create(rSet.getString("songuri"))));
+        }
+
+        return songs;
+    }
+
+    @Scheduled(fixedRate=5 * 1000 * 60) //Every 5 minutes reindex
+    public void refreshSearchIndex() throws SQLException {
+        LOGGER.info("Started refreshing search_index materialized view");
+        config.dbConnection().prepareStatement("REFRESH MATERIALIZED VIEW search_index").execute();
+        LOGGER.info("Finished refreshing search_index materialized view");
     }
 }

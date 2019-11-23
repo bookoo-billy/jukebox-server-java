@@ -51,5 +51,15 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         PRIMARY KEY (playlistid, songid, inserttime)
     );
 
-    GRANT ALL PRIVILEGES ON DATABASE jukebox TO jukebox;
+    CREATE MATERIALIZED VIEW search_index AS
+    SELECT artists.name AS artistname, albums.name AS albumname, songs.name AS songname,
+            artists.id AS artistid, albums.id AS albumid, songs.id AS songid,
+            songs.track AS songtrack, songs.uri AS songuri,
+            setweight(to_tsvector('english', artists.name), 'A') ||
+            setweight(to_tsvector('english', albums.name), 'B') ||
+            setweight(to_tsvector('english', songs.name), 'C') as document
+    FROM artists, albums, songs
+    WHERE songs.artistid = artists.id AND
+            songs.albumid = albums.id
+    GROUP BY artists.id, albums.id, songs.id;
 EOSQL
