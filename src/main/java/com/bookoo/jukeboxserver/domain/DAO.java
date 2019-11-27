@@ -339,8 +339,14 @@ public class DAO {
     }
 
     public List<Song> searchSongs(String search) throws SQLException {
-        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM search_index WHERE document @@ plainto_tsquery(?)");
-        pStat.setString(1, search);
+        final PreparedStatement pStat;
+
+        if (search == null || "".equals(search)) {
+            pStat = config.dbConnection().prepareStatement("SELECT * FROM search_index");
+        } else {
+            pStat = config.dbConnection().prepareStatement("SELECT * FROM search_index WHERE document @@ plainto_tsquery(?)");
+            pStat.setString(1, search);
+        }
 
         ResultSet rSet = pStat.executeQuery();
         ArrayList<Song> songs = new ArrayList<> ();
@@ -350,6 +356,25 @@ public class DAO {
         }
 
         return songs;
+    }
+
+    public List<Playlist> searchPlaylists(String search) throws SQLException {
+        final PreparedStatement pStat;
+
+        if (search == null || "".equals(search)) {
+            pStat = config.dbConnection().prepareStatement("SELECT * FROM playlists");
+        } else {
+            throw new UnsupportedOperationException("Playlist searching is not yet supported");
+        }
+
+        ResultSet rSet = pStat.executeQuery();
+        ArrayList<Playlist> playlists = new ArrayList<> ();
+
+        while (rSet.next()) {
+            playlists.add(new Playlist(UUID.fromString(rSet.getString("id")), rSet.getString("name"), null));
+        }
+
+        return playlists;
     }
 
     @Scheduled(fixedRate=5 * 1000 * 60) //Every 5 minutes reindex

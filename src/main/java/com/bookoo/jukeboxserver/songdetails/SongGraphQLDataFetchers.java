@@ -6,6 +6,7 @@ import java.util.List;
 import com.bookoo.jukeboxserver.domain.Album;
 import com.bookoo.jukeboxserver.domain.Artist;
 import com.bookoo.jukeboxserver.domain.DAO;
+import com.bookoo.jukeboxserver.domain.Playlist;
 import com.bookoo.jukeboxserver.domain.Song;
 
 import org.springframework.beans.factory.annotation.Autowired;

@@ -52,5 +52,17 @@ public class PlaylistGraphQLDataFetchers {
                 throw new RuntimeException(e);
             }
         };
+    }
+
+	public DataFetcher<List<Playlist>> searchPlaylistsDataFetcher() {
+		return dataFetchingEnvironment -> {
+            String search = dataFetchingEnvironment.getArgument("search");
+
+            try {
+                return dao.searchPlaylists(search);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        };
 	}
 }
