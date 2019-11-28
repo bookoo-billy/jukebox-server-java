@@ -4,6 +4,7 @@ import java.net.URI;
 import java.sql.SQLException;
 import java.util.Map;
 
+import com.bookoo.jukeboxserver.MediaPlayer;
 import com.bookoo.jukeboxserver.domain.DAO;
 import com.bookoo.jukeboxserver.domain.Song;
 
@@ -17,6 +18,9 @@ public class SongGraphQLDataMutators {
 
     @Autowired
     private DAO dao;
+
+    @Autowired
+    private MediaPlayer mediaPlayer;
 
     @SuppressWarnings("unchecked")
     public DataFetcher<Song> createSongMutator() {
@@ -38,6 +42,36 @@ public class SongGraphQLDataMutators {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        };
+    }
+
+	public DataFetcher<Song> playSongMutator() {
+		return dataFetchingEnvironment -> {
+            String songId = (String) dataFetchingEnvironment.getArguments().get("songId");
+
+            try {
+                Song song = dao.getSongById(songId);
+
+                if (song != null) {
+                    return mediaPlayer.play(song);
+                }
+
+                throw new RuntimeException("Could not find song with ID " + songId);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        };
+	}
+
+	public DataFetcher<Song> pauseSongMutator() {
+		return dataFetchingEnvironment -> {
+            return mediaPlayer.pause();
+        };
+    }
+
+	public DataFetcher<Song> resumeSongMutator() {
+		return dataFetchingEnvironment -> {
+            return mediaPlayer.resume();
         };
     }
 }

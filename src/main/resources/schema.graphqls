@@ -14,6 +14,9 @@ type Mutation {
     createPlaylist(input: PlaylistInput): Playlist
     addSongToPlaylist(playlistId: ID, songId: ID): Playlist
     removeSongFromPlaylist(playlistId: ID, songId: ID, timestamp: ID): Playlist
+    playSong(songId: ID): Song
+    pauseSong(input: String): Song
+    resumeSong(input: String): Song
 }
 
 input SongInput {

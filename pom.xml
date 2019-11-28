@@ -65,6 +65,12 @@
 			<artifactId>postgresql</artifactId>
 			<version>42.2.8</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>13.0.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

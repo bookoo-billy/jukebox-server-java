@@ -113,7 +113,10 @@ public class GraphQLProvider {
                             .dataFetcher("createAlbum", albumMutators.createAlbumMutator())
                             .dataFetcher("createPlaylist", playlistMutators.createPlaylistMutator())
                             .dataFetcher("addSongToPlaylist", playlistMutators.addSongToPlaylistMutator())
-                            .dataFetcher("removeSongFromPlaylist", playlistMutators.removeSongFromPlaylistMutator()))
+                            .dataFetcher("removeSongFromPlaylist", playlistMutators.removeSongFromPlaylistMutator())
+                            .dataFetcher("playSong", songMutators.playSongMutator())
+                            .dataFetcher("pauseSong", songMutators.pauseSongMutator())
+                            .dataFetcher("resumeSong", songMutators.resumeSongMutator()))
                     .build();
     }
 }
