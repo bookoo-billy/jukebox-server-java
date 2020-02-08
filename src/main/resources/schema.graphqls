@@ -20,24 +20,24 @@ type Mutation {
 }
 
 input SongInput {
-    name: String
-    artistId: String
-    albumId: String
+    name: String!
+    artistId: String!
+    albumId: String!
     track: Int
-    uri: String
+    uri: String!
 }
 
 input ArtistInput {
-    name: String
+    name: String!
 }
 
 input AlbumInput {
-    name: String
-    artistId: String
+    name: String!
+    artistId: String!
 }
 
 input PlaylistInput {
-    name: String
+    name: String!
 }
 
 type Song {

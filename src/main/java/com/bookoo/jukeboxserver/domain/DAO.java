@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -144,6 +145,25 @@ public class DAO {
         return null;
     }
 
+    public Song removeSong(String songId) throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement(
+            "DELETE FROM songs WHERE id=?::uuid RETURNING *");
+
+        pStat.setString(1, songId);
+
+        if (pStat.execute()) {
+            ResultSet rSet = pStat.getResultSet();
+            if (rSet.next()) {
+                return new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"),
+                new Album(UUID.fromString(rSet.getString("albumid")), null, null, null),
+                new Artist(UUID.fromString(rSet.getString("artistid")), null, null, null), rSet.getInt("track"),
+                URI.create(rSet.getString("uri")));
+            }
+        }
+
+        return null;  
+    }
+
     public Playlist removeSongFromPlaylist(String playlistId, String songId, String timestamp) throws SQLException {
         PreparedStatement pStat = config.dbConnection().prepareStatement(
                 "DELETE FROM playlistsongs WHERE playlistid=?::uuid AND songid=?::uuid AND inserttime=? RETURNING *");
@@ -176,7 +196,7 @@ public class DAO {
 
     public List<PlaylistItem> getItemsOfPlaylist(Playlist playlist) throws SQLException {
         PreparedStatement pStat = config.dbConnection().prepareStatement(
-                "SELECT songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri, playlistsongs.inserttime AS psinserttime "
+                "SELECT songs.artistid AS songartistid, songs.albumid AS songalbumid, songs.id AS songid, songs.name AS songname, songs.track AS songtrack, songs.uri AS songuri, playlistsongs.inserttime AS psinserttime "
                         + "FROM playlists, playlistsongs, songs "
                         + "WHERE playlists.id=?::uuid AND playlistsongs.playlistid=playlists.id AND songs.id = playlistsongs.songid "
                         + "ORDER BY inserttime ASC");
@@ -187,7 +207,9 @@ public class DAO {
 
         while (rSet.next()) {
             playlistItems.add(new PlaylistItem(
-                    new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"), null, null,
+                    new Song(UUID.fromString(rSet.getString("songid")), rSet.getString("songname"),
+                            new Album(UUID.fromString(rSet.getString("songalbumid"))),
+                            new Artist(UUID.fromString(rSet.getString("songartistid"))),
                             rSet.getInt("songtrack"), URI.create(rSet.getString("songuri"))),
                     rSet.getObject("psinserttime", LocalDateTime.class)));
         }
@@ -336,6 +358,33 @@ public class DAO {
         }
 
         return null;
+    }
+
+    public List<Song> listSongs() throws SQLException {
+        PreparedStatement pStat = config.dbConnection().prepareStatement("SELECT * FROM songs");
+        List<Song> songs = new LinkedList<Song> ();
+
+        ResultSet rSet = pStat.executeQuery();
+        while (rSet.next()) {
+            final Album album;
+
+            if (rSet.getString("albumid") != null)  album = new Album(UUID.fromString(rSet.getString("albumid")));
+            else album = null;
+
+            final Artist artist;
+
+            if (rSet.getString("artistid") != null) artist =  new Artist(UUID.fromString(rSet.getString("artistid")));
+            else artist = null;
+
+            final URI uri;
+
+            if (rSet.getString("uri") != null) uri = URI.create(rSet.getString("uri"));
+            else uri = null;
+
+            songs.add(new Song(UUID.fromString(rSet.getString("id")), rSet.getString("name"), album, artist, rSet.getInt("track"), uri));
+        }
+
+        return songs;
     }
 
     public List<Song> searchSongs(String search) throws SQLException {

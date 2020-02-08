@@ -1,5 +1,6 @@
 package com.bookoo.jukeboxserver.indexing;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -7,10 +8,12 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.SQLException;
+import java.util.List;
 
 import com.bookoo.jukeboxserver.domain.Album;
 import com.bookoo.jukeboxserver.domain.Artist;
 import com.bookoo.jukeboxserver.domain.DAO;
+import com.bookoo.jukeboxserver.domain.Song;
 import com.mpatric.mp3agic.ID3v1;
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.InvalidDataException;
@@ -63,7 +66,8 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
                     } catch (NumberFormatException e) {
                         track = 0;
                     }
-                    dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
+                    Song created = dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
+                    LOGGER.info("Created song: " + created);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -79,7 +83,8 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
                     } catch (NumberFormatException e) {
                         track = 0;
                     }
-                    dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
+                    Song created = dao.createSong(tag.getTitle(), artist, album, track, file.toUri());
+                    LOGGER.info("Created song: " + created);
                 } catch (SQLException e) {
                     throw new RuntimeException(e);
                 }
@@ -101,6 +106,12 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
 
     @Override
     public void run(String... args) throws Exception {
+        addSongs(args);
+        removeSongs();
+        dao.refreshSearchIndex();
+    }
+
+    public void addSongs(String... args) throws Exception {
         Path startingDir = Path.of(args[0]);
         ID3TagReader id3TagReader = new ID3TagReader(dao);
 
@@ -109,7 +120,22 @@ public class ID3TagReader extends SimpleFileVisitor<Path> implements CommandLine
         Files.walkFileTree(startingDir, id3TagReader);
 
         LOGGER.info("Finished indexing songs from local directory " + startingDir);
+    }
 
-        dao.refreshSearchIndex();
+    public void removeSongs() throws Exception {
+        LOGGER.info("Starting removing songs from index that no longer exist");
+        List<Song> songs = dao.listSongs();
+
+        for (Song song : songs) {
+            if (song.getUri().getScheme().equals("file")) {
+                File file = new File(song.getUri());
+                if (!file.isFile()) {
+                    Song removed = dao.removeSong(song.getUuid().toString());
+                    LOGGER.info("Removed song " + removed);
+                }
+            }
+        }
+
+        LOGGER.info("Finished removing songs from index that no longer exist");
     }
 }
